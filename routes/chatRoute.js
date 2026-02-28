@@ -7,7 +7,8 @@ import {
     getAllConversations,
     getConversationMessagesAdmin,
     sendMessageAdmin,
-    updateConversationStatus
+    updateConversationStatus,
+    deleteConversation
 } from '../controllers/chatController.js'
 import auth from '../middleware/auth.js'
 import adminAuth from '../middleware/adminAuth.js'
@@ -25,5 +26,6 @@ chatRouter.post('/admin/conversations', adminAuth, getAllConversations)
 chatRouter.post('/admin/messages', adminAuth, getConversationMessagesAdmin)
 chatRouter.post('/admin/send-message', adminAuth, sendMessageAdmin)
 chatRouter.post('/admin/update-status', adminAuth, updateConversationStatus)
+chatRouter.post('/admin/delete-conversation', adminAuth, deleteConversation)
 
 export default chatRouter

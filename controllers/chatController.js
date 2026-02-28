@@ -342,6 +342,41 @@ const updateConversationStatus = async (req, res) => {
     }
 }
 
+// Delete conversation and all its messages
+const deleteConversation = async (req, res) => {
+    try {
+        const { conversationId } = req.body
+
+        const conversation = await chatConversationModel.findById(conversationId)
+        if (!conversation) {
+            return res.json({ success: false, message: 'Conversation not found' })
+        }
+
+        // Only allow deletion if conversation is closed
+        if (conversation.status !== 'closed') {
+            return res.json({
+                success: false,
+                message: 'Can only delete closed conversations'
+            })
+        }
+
+        // Delete all messages in the conversation
+        await chatMessageModel.deleteMany({ conversationId })
+
+        // Delete the conversation
+        await chatConversationModel.findByIdAndDelete(conversationId)
+
+        res.json({
+            success: true,
+            message: 'Conversation and all messages deleted successfully'
+        })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 export {
     getOrCreateConversation,
     getConversationMessages,
@@ -350,5 +385,6 @@ export {
     getAllConversations,
     getConversationMessagesAdmin,
     sendMessageAdmin,
-    updateConversationStatus
+    updateConversationStatus,
+    deleteConversation
 }
