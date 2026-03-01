@@ -18,11 +18,7 @@ import chatRouter from './routes/chatRoute.js'
 const app = express()
 const server = createServer(app)
 const io = new Server(server, {
-    cors: {
-        origin: [process.env.FRONTEND_URL, process.env.ADMIN_URL],
-        credentials: true
-    }
-})
+   cors: { origin: [process.env.FRONTEND_URL, process.env.ADMIN_URL], credentials: true } })
 
 const port = process.env.PORT || 4000
 connectDB()

@@ -1,12 +1,10 @@
 import orderModel from "../models/orderModel.js";
 import productModel from "../models/productsModels.js";
 
-// Get dashboard overview
+
 const getDashboardOverview = async (req, res) => {
     try {
         const { period = 'today' } = req.query;
-
-        // Calculate date range
         const now = new Date();
         let startDate, endDate;
 
@@ -55,7 +53,7 @@ const getDashboardOverview = async (req, res) => {
         // Get unique customers
         const uniqueCustomers = new Set(orders.map(order => order.userId)).size;
 
-        // Payment method breakdown - only count when actually contributing to revenue
+        // Payment method breakdown, only count when actually contributing to revenue
         const paymentMethods = {
             COD: revenueOrders.filter(order => order.paymentMethod === 'COD').length,
             MoMo: revenueOrders.filter(order => order.paymentMethod === 'MoMo').length,
@@ -349,9 +347,6 @@ const syncSalesCount = async (req, res) => {
 const getBestSellers = async (req, res) => {
     try {
         const { limit = 10 } = req.query;
-
-        // Get products with salesCount > 0, sorted by salesCount descending
-        // Include bestseller products even if salesCount = 0
         const bestSellers = await productModel.find({
             $or: [
                 { salesCount: { $gt: 0 } },
@@ -359,7 +354,7 @@ const getBestSellers = async (req, res) => {
             ]
         })
         .select('name image price salesCount bestseller')
-        .sort({ salesCount: -1, bestseller: -1 }) // Sales count first, then bestseller
+        .sort({ salesCount: -1, bestseller: -1 }) 
         .limit(parseInt(limit));
 
         res.json({

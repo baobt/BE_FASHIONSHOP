@@ -59,8 +59,29 @@ const placeOrder = async (req, res) => {
 //Placing orders using Paypal Method
 const placeOrderPaypal = async (req, res) => {
     try {
+        const { orderData, paypalInfo } = req.body
+        const { userId } = req.body // From auth middleware
 
-        const { userId, items, amount, address } = req.body
+
+
+        if (!orderData || !paypalInfo) {
+            return res.json({ success: false, message: 'Missing order data or PayPal info' })
+        }
+
+        if (!userId) {
+            return res.json({ success: false, message: 'User not authenticated' })
+        }
+
+        const { items, amount, usdAmount, address, currency } = orderData
+
+        // Check if order already exists for this PayPal transaction
+        const existingOrder = await orderModel.findOne({
+            'paypalInfo.id': paypalInfo.id
+        })
+
+        if (existingOrder) {
+            return res.json({ success: false, message: 'Order already processed' })
+        }
 
         // Check stock before placing order - all products must have stock set
         for (const item of items) {
@@ -83,17 +104,25 @@ const placeOrderPaypal = async (req, res) => {
             })
         }
 
-        const orderData = {
+        const orderDataToSave = {
             userId,
             items,
             address,
-            amount,
+            amount, // VND amount
+            usdAmount, // USD amount paid to PayPal
+            currency: currency || 'VND',
             paymentMethod: "PayPal",
             payment: true,
+            paypalInfo: {
+                id: paypalInfo.id,
+                status: paypalInfo.status,
+                payer: paypalInfo.payer,
+                purchase_units: paypalInfo.purchase_units
+            },
             date: Date.now()
         }
 
-        const newOrder = new orderModel(orderData)
+        const newOrder = new orderModel(orderDataToSave)
         await newOrder.save()
 
         await userModel.findByIdAndUpdate(userId, { cartData: {} })
@@ -101,7 +130,7 @@ const placeOrderPaypal = async (req, res) => {
         res.json({ success: true, message: "Order Placed with PayPal" })
 
     } catch (error) {
-        console.log(error)
+        console.log('PayPal order error:', error)
         res.json({ success: false, message: error.message })
     }
 }
@@ -165,9 +194,9 @@ const placeOrderMomo = async (req, res) => {
             partnerCode,
             accessKey,
             requestId,
-            amount: amountStr, // ✅ Đã là string - fix lỗi chính
+            amount: amountStr, 
             orderId,
-            orderInfo, // ⚠️ dùng bản encode
+            orderInfo, 
             redirectUrl,
             ipnUrl,
             requestType,
@@ -237,7 +266,7 @@ const placeOrderMomo = async (req, res) => {
 //Auto archive shipped orders after 2 days
 const autoArchiveOrders = async () => {
     try {
-        const twoDaysAgo = Date.now() - (2 * 24 * 60 * 60 * 1000) // 2 days in milliseconds
+        const twoDaysAgo = Date.now() - (2 * 24 * 60 * 60 * 1000) 
 
         const ordersToArchive = await orderModel.find({
             status: 'Shipped',
@@ -333,13 +362,28 @@ const updateStatus = async (req, res) => {
 
         // Handle sales count for COD orders when status changes to Delivered
         if (status === 'Delivered' && order.paymentMethod === 'COD' && !order.payment) {
-            // Mark as paid and increase sales count when order is delivered
+            
             await orderModel.findByIdAndUpdate(orderId, {
                 status,
                 payment: true
             })
 
-            // Increase sales count for COD orders when delivered
+           
+            for (const item of order.items) {
+                if (item.quantity > 0) {
+                    await productModel.findByIdAndUpdate(item._id, {
+                        $inc: { salesCount: item.quantity }
+                    })
+                }
+            }
+        } else if (status === 'Delivered' && order.paymentMethod === 'MoMo' && !order.payment) {
+          
+            await orderModel.findByIdAndUpdate(orderId, {
+                status,
+                payment: true
+            })
+
+            
             for (const item of order.items) {
                 if (item.quantity > 0) {
                     await productModel.findByIdAndUpdate(item._id, {
@@ -348,7 +392,7 @@ const updateStatus = async (req, res) => {
                 }
             }
         } else {
-            // Just update status for other cases
+            
             await orderModel.findByIdAndUpdate(orderId, { status })
         }
 
@@ -475,8 +519,21 @@ const momoCallback = async (req, res) => {
         }
 
         if (resultCode === "0") {
-            // Payment successful
+            // Payment successful - update payment status and increase sales count
             await orderModel.findByIdAndUpdate(orderId, { payment: true });
+
+            // Find the order and increase sales count
+            const order = await orderModel.findById(orderId);
+            if (order) {
+                for (const item of order.items) {
+                    if (item.quantity > 0) {
+                        await productModel.findByIdAndUpdate(item._id, {
+                            $inc: { salesCount: item.quantity }
+                        })
+                    }
+                }
+            }
+
             res.json({ success: true, message: 'Payment confirmed' });
         } else {
             // Payment failed
