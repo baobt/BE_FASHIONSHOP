@@ -18,7 +18,39 @@ import chatRouter from './routes/chatRoute.js'
 const app = express()
 const server = createServer(app)
 const io = new Server(server, {
-   cors: { origin: [process.env.FRONTEND_URL, process.env.ADMIN_URL], credentials: true } })
+    cors: {
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true)
+
+            // Allow all Vercel deployments and localhost for development
+            const allowedOrigins = [
+                'http://localhost:5173',  // Frontend dev
+                'http://localhost:5174',  // Admin dev
+                /^https:\/\/.*\.vercel\.app$/,  // Any Vercel deployment
+                /^https:\/\/.*\.onrender\.com$/   // Any Render deployment
+            ]
+
+            // Check if origin matches any allowed pattern
+            const isAllowed = allowedOrigins.some(allowed => {
+                if (typeof allowed === 'string') {
+                    return allowed === origin
+                } else if (allowed instanceof RegExp) {
+                    return allowed.test(origin)
+                }
+                return false
+            })
+
+            if (isAllowed) {
+                return callback(null, true)
+            }
+
+            console.log('Socket CORS blocked origin:', origin)
+            return callback(new Error('Not allowed by CORS'))
+        },
+        credentials: true
+    }
+})
 
 const port = process.env.PORT || 4000
 connectDB()
@@ -120,6 +152,42 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id)
     })
+})
+
+app.get('/api/ping', async (req, res) => {
+    try {
+        // Test database connection
+        const mongoose = (await import('mongoose')).default
+        const dbState = mongoose.connection.readyState
+
+        // Check if database is connected (1 = connected, 2 = connecting, 3 = disconnecting)
+        if (dbState !== 1) {
+            return res.status(503).json({
+                success: false,
+                message: "Database not ready",
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        // Test a simple database operation
+        const testCollection = mongoose.connection.db.collection('users')
+        await testCollection.findOne({}, { limit: 1 })
+
+        res.json({
+            success: true,
+            message: "Server and database are fully ready",
+            timestamp: new Date().toISOString(),
+            dbStatus: "connected"
+        })
+    } catch (error) {
+        console.log('Ping check failed:', error.message)
+        res.status(503).json({
+            success: false,
+            message: "Server not fully ready",
+            error: error.message,
+            timestamp: new Date().toISOString()
+        })
+    }
 })
 
 app.get('/',(req , res)=>{
