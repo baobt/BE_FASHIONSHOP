@@ -21,15 +21,16 @@ const loginUser = async (req,res) => {
             return res.json({success:false, message:"User doesn't exists"})
         }
 
+        // Email verification temporarily disabled
         // Check if email is verified
-        if(!user.emailVerified){
-            return res.json({
-                success:false,
-                message:"Please verify your email before logging in. Check your email for the verification code.",
-                requiresVerification: true,
-                email: email
-            })
-        }
+        // if(!user.emailVerified){
+        //     return res.json({
+        //         success:false,
+        //         message:"Please verify your email before logging in. Check your email for the verification code.",
+        //         requiresVerification: true,
+        //         email: email
+        //     })
+        // }
 
         const isMatch = await bcrypt.compare(password, user.password)
 
@@ -284,7 +285,9 @@ const getUserWishlist = async (req, res) => {
     }
 }
 
+// Email verification temporarily disabled
 //route for verify email
+/*
 const verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body
@@ -335,8 +338,11 @@ const verifyEmail = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+*/
 
+// Email verification temporarily disabled
 //route for resend verification code
+/*
 const resendVerificationCode = async (req, res) => {
     try {
         const { email } = req.body
@@ -374,8 +380,11 @@ const resendVerificationCode = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+*/
 
+// Email verification temporarily disabled
 //route for forgot password
+/*
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body
@@ -409,8 +418,11 @@ const forgotPassword = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+*/
 
+// Email verification temporarily disabled
 //route for reset password
+/*
 const resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body
@@ -446,5 +458,6 @@ const resetPassword = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+*/
 
-export {loginUser,registerUser,adminLogin, getUserProfile, updateUserProfile, updateWishlist, getUserWishlist, verifyEmail, resendVerificationCode, forgotPassword, resetPassword}
+export {loginUser,registerUser,adminLogin, getUserProfile, updateUserProfile, updateWishlist, getUserWishlist}

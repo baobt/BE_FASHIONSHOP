@@ -1,23 +1,18 @@
-import nodemailer from 'nodemailer'
+// Email verification disabled until domain is owned
+// import { Resend } from 'resend'
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-})
+// const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const sendVerificationEmail = async (email, code) => {
+    // Temporarily disabled - requires owned domain
+    console.log('Email verification disabled - sendVerificationEmail called but not executed')
+    return { disabled: true, message: 'Email verification temporarily disabled' }
+
+    /*
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
+        const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || 'Ecommerce App <onboarding@resend.dev>',
+            to: [email],
             subject: 'Email Verification - Ecommerce App',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -32,21 +27,31 @@ export const sendVerificationEmail = async (email, code) => {
                     <p>Best regards,<br>Ecommerce App Team</p>
                 </div>
             `
+        })
+
+        if (error) {
+            console.log('Resend email error:', error)
+            throw error
         }
 
-        const result = await transporter.sendMail(mailOptions)
-        return result
+        return data
     } catch (error) {
         console.log('Email send error:', error)
         throw error
     }
+    */
 }
 
 export const sendPasswordResetCodeEmail = async (email, code) => {
+    // Temporarily disabled - requires owned domain
+    console.log('Email verification disabled - sendPasswordResetCodeEmail called but not executed')
+    return { disabled: true, message: 'Email verification temporarily disabled' }
+
+    /*
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
+        const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || 'Ecommerce App <noreply@resend.dev>',
+            to: [email],
             subject: 'Password Reset Code - Ecommerce App',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -62,23 +67,33 @@ export const sendPasswordResetCodeEmail = async (email, code) => {
                     <p>Best regards,<br>Ecommerce App Team</p>
                 </div>
             `
+        })
+
+        if (error) {
+            console.log('Resend email error:', error)
+            throw error
         }
 
-        const result = await transporter.sendMail(mailOptions)
-        return result
+        return data
     } catch (error) {
         console.log('Email send error:', error)
         throw error
     }
+    */
 }
 
 export const sendPasswordResetEmail = async (email, token) => {
+    // Temporarily disabled - requires owned domain
+    console.log('Email verification disabled - sendPasswordResetEmail called but not executed')
+    return { disabled: true, message: 'Email verification temporarily disabled' }
+
+    /*
     try {
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
+        const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || 'Ecommerce App <noreply@resend.dev>',
+            to: [email],
             subject: 'Password Reset - Ecommerce App',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -96,12 +111,17 @@ export const sendPasswordResetEmail = async (email, token) => {
                     <p>Best regards,<br>Ecommerce App Team</p>
                 </div>
             `
+        })
+
+        if (error) {
+            console.log('Resend email error:', error)
+            throw error
         }
 
-        const result = await transporter.sendMail(mailOptions)
-        return result
+        return data
     } catch (error) {
         console.log('Email send error:', error)
         throw error
     }
+    */
 }
