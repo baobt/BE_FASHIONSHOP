@@ -20,18 +20,18 @@ const server = createServer(app)
 const io = new Server(server, {
     cors: {
         origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps or curl requests)
+            
             if (!origin) return callback(null, true)
 
-            // Allow all Vercel deployments and localhost for development
+            
             const allowedOrigins = [
-                'http://localhost:5173',  // Frontend dev
-                'http://localhost:5174',  // Admin dev
-                /^https:\/\/.*\.vercel\.app$/,  // Any Vercel deployment
-                /^https:\/\/.*\.onrender\.com$/   // Any Render deployment
+                'http://localhost:5173',  
+                'http://localhost:5174',  
+                /^https:\/\/.*\.vercel\.app$/,  
+                /^https:\/\/.*\.onrender\.com$/   
             ]
 
-            // Check if origin matches any allowed pattern
+            
             const isAllowed = allowedOrigins.some(allowed => {
                 if (typeof allowed === 'string') {
                     return allowed === origin
@@ -77,7 +77,7 @@ app.use('/api/chat', chatRouter)
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id)
 
-    // Join user room for personalized notifications
+    
     socket.on('join', (userId) => {
         socket.join(`user_${userId}`)
         console.log(`User ${userId} joined room`)
@@ -160,7 +160,7 @@ app.get('/api/ping', async (req, res) => {
         const mongoose = (await import('mongoose')).default
         const dbState = mongoose.connection.readyState
 
-        // Check if database is connected (1 = connected, 2 = connecting, 3 = disconnecting)
+        
         if (dbState !== 1) {
             return res.status(503).json({
                 success: false,
